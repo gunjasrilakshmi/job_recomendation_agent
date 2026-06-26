@@ -19,10 +19,20 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
 
-    html, body, [class*="st-"] {
-        font-family: 'Inter', sans-serif;
-    }
+html, body, [class*="st-"]:not([data-testid="stIconMaterial"]) {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Icon font must win regardless of the broad Inter rule above */
+[data-testid="stIconMaterial"],
+[data-testid="stIconMaterial"] span,
+span[data-testid="stIconMaterial"] {
+    font-family: 'Material Symbols Outlined' !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+}
 
     .main-title {
         background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 25%, #A78BFA 50%, #06B6D4 75%, #10B981 100%);
