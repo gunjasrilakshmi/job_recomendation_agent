@@ -21,6 +21,23 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Sidebar ──
+with st.sidebar:
+    st.markdown("# 🚀 Jobs Engine")
+    st.caption("AI Career Intelligence Agent")
+    st.divider()
+    
+    if "user_profile" in st.session_state:
+        profile = st.session_state["user_profile"]
+        st.markdown("### 👤 Your Profile")
+        st.metric("Skills", len(profile.get("skills", [])))
+        st.metric("Level", profile.get("experience_level", "N/A"))
+    else:
+        st.info("📤 Upload your resume to get started")
+        
+    from utils.sidebar import render_agentic_workflow
+#     render_agentic_workflow()
+
 # ── Custom CSS ──
 st.markdown("""
 <style>
@@ -114,27 +131,36 @@ if uploaded_file is not None:
     
     st.divider()
     
-    # ── AI Analysis ──
-    col_btn, col_info = st.columns([1, 3])
-    with col_btn:
-        analyze_clicked = st.button(
-            "🤖 Analyze with AI",
-            type="primary",
-            use_container_width=True,
-        )
-    with col_info:
-        st.caption(
-            "Powered by Gemini 2.5 Flash — extracts skills, experience level, roles, and education."
-        )
+    # ── AI Agent Pipeline ──
+    analyze_clicked = st.button(
+        "🚀 Run Resume Analysis Agent",
+        type="primary",
+        use_container_width=True,
+    )
     
     if analyze_clicked:
-        with st.spinner("🧠 AI is analyzing your resume... This may take a moment."):
-            try:
-                profile = extract_resume_info(resume_text)
-            except Exception as e:
-                st.error(f"❌ AI analysis failed: {str(e)}")
-                st.info("💡 Make sure your GEMINI_API_KEY is configured correctly.")
-                st.stop()
+        from utils.agent_display import agent_status_card, agent_connector
+        
+        st.markdown("### 🤖 Agent Pipeline Execution")
+        st.caption("Agents are processing your resume in sequence...")
+        st.write("")
+        
+        # Step 1: Resume Upload — mark completed
+        agent_status_card("Resume Upload", "📤", "Ingest candidate resume PDF", "completed")
+        agent_connector()
+        
+        # Step 2: Resume Analysis Agent — show running
+        agent_placeholder = st.empty()
+        with agent_placeholder.container():
+            agent_status_card("Resume Analysis Agent", "🤖", "Parsing text & extracting skills with Gemini AI", "running")
+        
+        try:
+            profile = extract_resume_info(resume_text)
+        except Exception as e:
+            with agent_placeholder.container():
+                agent_status_card("Resume Analysis Agent", "🤖", f"Error: {str(e)}", "error")
+            st.info("💡 Make sure your GEMINI_API_KEY is configured correctly.")
+            st.stop()
         
         # Also extract skills using keyword matcher as supplement
         keyword_skills = extract_skills_from_text(resume_text)
@@ -147,6 +173,10 @@ if uploaded_file is not None:
         # Store in session state
         st.session_state["user_profile"] = profile
         st.session_state["resume_text"] = resume_text
+        
+        # Mark completed
+        with agent_placeholder.container():
+            agent_status_card("Resume Analysis Agent", "🤖", f"Extracted {len(all_skills)} skills, {len(profile.get('roles', []))} roles", "completed")
         
         # ── Display Results ──
         st.markdown('<div class="success-banner">✅ <strong>Profile extracted successfully!</strong> '

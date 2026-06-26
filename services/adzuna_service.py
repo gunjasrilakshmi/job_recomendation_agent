@@ -107,35 +107,50 @@ def search_jobs(
         if full_time:
             params["full_time"] = 1
         
-        try:
-            response = requests.get(url, params=params, timeout=15)
-            
-            if response.status_code == 401:
-                raise ValueError("Invalid Adzuna API credentials. Please check your APP_ID and APP_KEY.")
-            
-            if response.status_code == 429:
-                # Rate limited — return what we have
+        import time
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, params=params, timeout=15)
+                if response.status_code == 401:
+                    raise ValueError("Invalid Adzuna API credentials. Please check your APP_ID and APP_KEY.")
+                if response.status_code == 429:
+                    # Rate limited — return what we have
+                    break
+                if response.status_code == 503:
+                    # Service unavailable, retry after backoff
+                    if attempt < max_retries - 1:
+                        backoff = 2 ** attempt
+                        time.sleep(backoff)
+                        continue
+                    else:
+                        raise Exception("Adzuna service is unavailable (503). Please try again later.")
+                response.raise_for_status()
+                data = response.json()
+                for result in data.get("results", []):
+                    job = _normalize_job(result)
+                    all_jobs.append(job)
+                # If we got fewer results than expected, no more pages
+                if len(data.get("results", [])) < results_per_page:
+                    break
+                # Successful request, break retry loop
                 break
-            
-            response.raise_for_status()
-            data = response.json()
-            
-            for result in data.get("results", []):
-                job = _normalize_job(result)
-                all_jobs.append(job)
-                
-            # If we got fewer results than expected, no more pages
-            if len(data.get("results", [])) < results_per_page:
-                break
-                
-        except requests.exceptions.Timeout:
-            if all_jobs:
-                break  # Return partial results
-            raise Exception("Adzuna API request timed out. Please try again.")
-        except requests.exceptions.RequestException as e:
-            if all_jobs:
-                break  # Return partial results
-            raise Exception(f"Failed to fetch jobs from Adzuna: {str(e)}")
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    backoff = 2 ** attempt
+                    time.sleep(backoff)
+                    continue
+                if all_jobs:
+                    break  # Return partial results
+                raise Exception("Adzuna API request timed out. Please try again.")
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    backoff = 2 ** attempt
+                    time.sleep(backoff)
+                    continue
+                if all_jobs:
+                    break  # Return partial results
+                raise Exception(f"Failed to fetch jobs from Adzuna: {str(e)}")
     
     return all_jobs[:count]
 

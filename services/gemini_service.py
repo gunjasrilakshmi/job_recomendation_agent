@@ -143,7 +143,16 @@ Return ONLY valid JSON with this structure (no markdown, no explanation):
         ...
     ],
     "match_assessment": "Strong Match" | "Good Match" | "Moderate Match" | "Developing Match",
-    "priority_skills": ["top skill to learn 1", "top skill to learn 2", "top skill to learn 3"]
+    "priority_skills": ["top skill to learn 1", "top skill to learn 2", "top skill to learn 3"],
+    "learning_roadmap": [
+        {{
+            "phase": "Phase title (e.g. Phase 1: Core Fundamentals)",
+            "duration": "Estimated time (e.g. Week 1-2)",
+            "skills": ["skill to focus on 1", "skill to focus on 2"],
+            "steps": ["actionable step 1", "actionable step 2"],
+            "resources": ["recommended online course, documentation, or tutorial 1", "recommended resource 2"]
+        }}
+    ]
 }}
 
 Be specific and actionable in your recommendations.
@@ -158,6 +167,7 @@ Be specific and actionable in your recommendations.
             "recommendations": result.get("recommendations", []),
             "match_assessment": result.get("match_assessment", "Moderate Match"),
             "priority_skills": result.get("priority_skills", []),
+            "learning_roadmap": result.get("learning_roadmap", []),
         }
     except Exception as e:
         raise Exception(f"Failed to analyze skill gap: {str(e)}")

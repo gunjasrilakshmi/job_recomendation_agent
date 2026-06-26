@@ -34,6 +34,26 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Sidebar ──
+with st.sidebar:
+    st.markdown("# 🚀 Jobs Engine")
+    st.caption("AI Career Intelligence Agent")
+    st.divider()
+    
+    if "user_profile" in st.session_state:
+        profile = st.session_state["user_profile"]
+        st.markdown("### 👤 Your Profile")
+        st.metric("Skills", len(profile.get("skills", [])))
+        st.metric("Level", profile.get("experience_level", "N/A"))
+        
+        if "matched_jobs" in st.session_state:
+            st.metric("Jobs Found", len(st.session_state["matched_jobs"]))
+    else:
+        st.info("📤 Upload your resume to get started")
+        
+#     from utils.sidebar import render_agentic_workflow
+#     render_agentic_workflow()
+
 # ── Custom CSS ──
 st.markdown("""
 <style>

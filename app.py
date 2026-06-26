@@ -4,6 +4,7 @@ Main application entry point and home page.
 """
 
 import streamlit as st
+# from utils.sidebar import render_agentic_workflow
 
 
 # ── Page Config ──
@@ -184,6 +185,8 @@ with st.sidebar:
             st.metric("Jobs Found", len(st.session_state["matched_jobs"]))
     else:
         st.info("📤 Upload your resume to get started")
+    
+#     render_agentic_workflow()
     
     st.divider()
     st.caption("Powered by Gemini 2.5 Flash · Adzuna API")
